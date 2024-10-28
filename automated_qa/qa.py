@@ -41,12 +41,12 @@ class APIHandler:
             print(json_data)
             if response.status_code == 200:
                 print(f"Successfully created stats data for dataset ID: {dataset_id}")
-                return True
+                # return True
             else:
                 print(f"Failed to create stats data for dataset ID: {dataset_id}")
                 print(f"Status code: {response.status_code}")
                 print(f"Response: {response.text}")
-                return False
+                # return False
 
     def get_datasets(self):
         response = requests.get(f"{self.base_url}/api/dataset/", headers=self.headers)

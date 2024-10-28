@@ -38,7 +38,7 @@ class APIHandler:
                 headers=self.headers,
                 data=json.dumps(json_data),
             )
-
+            print(json_data)
             if response.status_code == 200:
                 print(f"Successfully created stats data for dataset ID: {dataset_id}")
                 return True
@@ -190,7 +190,6 @@ def add_rows_to_frame(
 ):
     rows = []
     for column, value in data_dict.items():
-        print(value)
         val = value[0]
         reason = value[1]
         row = {}
@@ -268,9 +267,9 @@ def perform_qa(args,api):
             frame, column_to_value, label, NEW_FEED_DATE, dataset_id
         )
 
+    frame.to_csv(args.output_file, index=False)
     frame = frame.to_dict(orient="records")
     api.create_stats_data(dataset_id, frame)
-    frame.to_csv(args.output_file, index=False)
 
 
 # Set up argparse for CLI arguments
@@ -295,7 +294,7 @@ def main():
     parser_create.add_argument("sites", type=int, help="Total number of sites for the dataset to create")
 
     # Subparser for QA
-    parser_qa = subparsers.add_parser("qa", help="Perform QA on a dataset")
+    parser_qa = subparsers.add_parser("stats", help="Perform QA on a dataset")
     parser_qa.add_argument("-n", "--new_file", required=True, type=str, help="Path to the new data feed CSV file")
     parser_qa.add_argument("-o", "--old_file", required=True, type=str, help="Path to the old data feed CSV file")
     parser_qa.add_argument("-d", "--dataset_id", required=True, type=int, help="Provide the dataset id")
@@ -328,7 +327,7 @@ def main():
         success = api.create_dataset(name=args.name, frequency_in_days=args.days, total_sites=args.sites)
         if success:
             display_datasets(api)  # Display the updated list if the dataset was created successfully
-    elif args.command == "qa":
+    elif args.command == "stats":
         perform_qa(args, api)
 
 

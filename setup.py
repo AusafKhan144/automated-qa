@@ -6,10 +6,11 @@ setup(
     packages=find_packages(),
     install_requires=[
         "requests",  # Add any dependencies your script needs here
+        "pandas"
     ],
     entry_points={
         "console_scripts": [
-            "automated_qa=automated_qa.qa:main",  # Maps `automated_qa` command to `main` function in cli.py
+            "qa=automated_qa.qa:main", 
         ],
     },
     author="Ausaf Khan",

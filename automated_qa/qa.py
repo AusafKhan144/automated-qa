@@ -1,4 +1,3 @@
-from dotenv import load_dotenv
 from datetime import datetime
 import pandas as pd
 import requests
@@ -7,7 +6,7 @@ import json
 import os
 
 TOKEN = None
-CONFIG_PATH = os.path.expanduser("cli_app_config.json")
+CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".cli_app_config.json")
 
 def load_token():
     global TOKEN

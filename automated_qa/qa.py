@@ -20,8 +20,7 @@ def save_token(token):
         json.dump({"token": token}, file)
 
 class APIHandler:
-    env = "prd"
-    base_url = f"http://datamonitoring.wmc-platform-{env}.intranet/"
+    base_url = f"https://datamonitoring.watchmycompetitor.com/"
     headers = {}
 
     def __init__(self,**kwargs):

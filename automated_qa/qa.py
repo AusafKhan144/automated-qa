@@ -131,17 +131,31 @@ def read_frame(path: str) -> pd.DataFrame:
         # Read Excel and Parquet files without encoding
         return reading_func(path)
 
+def find_substring_index(lst, substring):
+    for i, item in enumerate(lst):
+        if substring in item:
+            return i
+    return -1
 
 def get_feed_date(df):
     formats = ["%Y%m%d", "%d/%m/%Y", "%m/%d/%Y"]
+    index = find_substring_index(df.columns,'DateExtract')
+    if index != -1:
+        column = list(df.columns)[index]
+    else:
+        column = 'DateExtractRun'
+    
     for format in formats:
         try:
             current_date = datetime.strptime(
-                str(df.DateExtractRun.unique().tolist()[0]), format
+                str(df[column].unique().tolist()[0]), format
             ).strftime("%Y-%m-%d")
         except ValueError:
             continue
-        return current_date
+        result = current_date
+    if not result:
+        result = datetime.now().strftime("%Y-%m-%d")
+    return result
 
 
 def get_null_counts(df: pd.DataFrame, columns: list[str], provided):

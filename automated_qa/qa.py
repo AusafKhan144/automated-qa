@@ -46,6 +46,16 @@ class APIHandler:
                 print(f"Status code: {response.status_code}")
                 print(f"Response: {response.text}")
                 # return False
+    
+    def remove_datasets(self,dataset_id):
+        response = requests.delete(f"{self.base_url}/api/dataset/{dataset_id}", headers=self.headers)
+        if response.status_code == 204:
+            return True
+        else:
+            print(f"Failed to get available datasets")
+            print(f"Status code: {response.status_code}")
+            print(f"Response: {response.text}")
+            return False
 
     def get_datasets(self):
         response = requests.get(f"{self.base_url}/api/dataset/", headers=self.headers)
@@ -94,11 +104,32 @@ def display_datasets(api):
 
 
 def read_frame(path: str) -> pd.DataFrame:
-    try:
-        df = pd.read_csv(path, encoding="utf-8-sig", low_memory=False)
-    except:
-        df = pd.read_csv(path, encoding="latin", low_memory=False)
-    return df
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"File not found: {path}")
+
+    # Mapping file extensions to read functions
+    read_funcs = {
+        ".csv": pd.read_csv,
+        ".xlsx": pd.read_excel,
+        ".parquet": pd.read_parquet
+    }
+
+    # Determine the file type and corresponding read function
+    ext = os.path.splitext(path)[1].lower()
+    reading_func = read_funcs.get(ext)
+
+    if reading_func is None:
+        raise ValueError(f"Unsupported file format: {ext}")
+
+    # Apply encoding fallback only for CSV files
+    if ext == ".csv":
+        try:
+            return reading_func(path, encoding="utf-8-sig", low_memory=False)
+        except UnicodeDecodeError:
+            return reading_func(path, encoding="latin", low_memory=False)
+    else:
+        # Read Excel and Parquet files without encoding
+        return reading_func(path)
 
 
 def get_feed_date(df):
@@ -286,6 +317,9 @@ def main():
     # Subparser for displaying datasets
     parser_list = subparsers.add_parser("list", help="Display all available dataset IDs")
 
+    parser_remove= subparsers.add_parser("remove", help="Remove a dataset ID")
+    parser_remove.add_argument("id", type=int, help="Provide the dataset id to remove")
+
     # Subparser for creating a dataset
     parser_create = subparsers.add_parser("create", help="Create a new dataset")
     parser_create.add_argument("name", type=str, help="Name of the dataset to create")
@@ -328,6 +362,8 @@ def main():
             display_datasets(api)  # Display the updated list if the dataset was created successfully
     elif args.command == "stats":
         perform_qa(args, api)
+    elif args.command == "remove":
+        api.remove_datasets(args.id)
 
 
 if __name__ == "__main__":

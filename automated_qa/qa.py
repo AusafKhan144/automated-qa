@@ -144,7 +144,8 @@ def get_feed_date(df):
         column = list(df.columns)[index]
     else:
         column = 'DateExtractRun'
-    
+    result = None
+    current_date = None
     for format in formats:
         try:
             current_date = datetime.strptime(

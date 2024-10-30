@@ -139,7 +139,8 @@ def perform_qa(args,api):
     else:
         check_critical_columns_present(new_df, duplicate_filter)
 
-    NEW_FEED_DATE = get_feed_date(new_df)
+    if not args.dataset_date:
+        NEW_FEED_DATE = get_feed_date(new_df)
 
     current_price_col = args.current_price
     original_price_col = args.original_price

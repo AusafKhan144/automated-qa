@@ -45,6 +45,7 @@ def main():
     parser_qa.add_argument("-op", "--original_price", type=str, default=None, help="Original price column in the data")
     parser_qa.add_argument("-c", "--critical_columns", nargs="+", default=None, help="List of critical columns to check for null values")
     parser_qa.add_argument("-dc", "--duplicate_filter", nargs="+", default=None, help="List columns to check for duplicated values")
+    parser_qa.add_argument('-date',"--dataset_date", type=valid_date,default=None, help="Provide the feed_date")
 
     args = parser.parse_args()
 

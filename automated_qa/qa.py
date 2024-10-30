@@ -1,163 +1,42 @@
-from datetime import datetime
 import pandas as pd
-import requests
-import argparse
-import json
-import os
+from datetime import datetime
+from automated_qa.utils import read_frame,check_critical_columns_present
 
-TOKEN = None
-CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".cli_app_config.json")
-
-def load_token():
-    global TOKEN
-    if os.path.exists(CONFIG_PATH):
-        with open(CONFIG_PATH, 'r') as file:
-            config = json.load(file)
-            TOKEN = config.get("token")
-
-def save_token(token):
-    with open(CONFIG_PATH, 'w') as file:
-        json.dump({"token": token}, file)
-
-class APIHandler:
-    base_url = f"https://datamonitoring.watchmycompetitor.com/"
-    headers = {}
-
-    def __init__(self,**kwargs):
-        token = kwargs.get("TOKEN")
-        self.headers = {
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
-        }
-
-    def create_stats_data(self, dataset_id, jdata):
-        for json_data in jdata:
-            response = requests.post(
-                f"{self.base_url}/api/stats/{dataset_id}",
-                headers=self.headers,
-                data=json.dumps(json_data),
-            )
-            print(json_data)
-            if response.status_code == 200:
-                print(f"Successfully created stats data for dataset ID: {dataset_id}")
-                # return True
-            else:
-                print(f"Failed to create stats data for dataset ID: {dataset_id}")
-                print(f"Status code: {response.status_code}")
-                print(f"Response: {response.text}")
-                # return False
-    
-    def remove_datasets(self,dataset_id):
-        response = requests.delete(f"{self.base_url}/api/dataset/{dataset_id}", headers=self.headers)
-        if response.status_code == 204:
-            return True
-        else:
-            print(f"Failed to get available datasets")
-            print(f"Status code: {response.status_code}")
-            print(f"Response: {response.text}")
-            return False
-
-    def get_datasets(self):
-        response = requests.get(f"{self.base_url}/api/dataset/", headers=self.headers)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            print(f"Failed to get available datasets")
-            print(f"Status code: {response.status_code}")
-            print(f"Response: {response.text}")
-            return {}
-
-    def create_dataset(self, **kwargs):
-
-        name = kwargs.get("name")
-        frequency_in_days = kwargs.get("frequency_in_days")
-        total_sites = kwargs.get("total_sites")
-
-        json_data = {
-            "name": name,
-            "frequency_in_days": frequency_in_days,
-            "total_sites": total_sites,
-        }
-
-        response = requests.post(
-            f"{self.base_url}/api/dataset/", headers=self.headers, json=json_data
-        )
-
-        if response.status_code == 200:
-            print(f'Successfully created dataset with ID: {response.json()["id"]}')
-            return True
-        else:
-            print(f"Failed to create dataset")
-            print(f"Status code: {response.status_code}")
-            print(f"Response: {response.text}")
-            return False
-
-
-def display_datasets(api):
-    datasets = api.get_datasets()
-    if datasets:
-        print("Available Dataset IDs:")
-        for dataset in datasets:
-            print(f"ID: {dataset['id']} - Name: {dataset.get('name', 'Unnamed')}")
-    else:
-        print("No datasets found.")
-
-
-def read_frame(path: str) -> pd.DataFrame:
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"File not found: {path}")
-
-    # Mapping file extensions to read functions
-    read_funcs = {
-        ".csv": pd.read_csv,
-        ".xlsx": pd.read_excel,
-        ".parquet": pd.read_parquet
-    }
-
-    # Determine the file type and corresponding read function
-    ext = os.path.splitext(path)[1].lower()
-    reading_func = read_funcs.get(ext)
-
-    if reading_func is None:
-        raise ValueError(f"Unsupported file format: {ext}")
-
-    # Apply encoding fallback only for CSV files
-    if ext == ".csv":
-        try:
-            return reading_func(path, encoding="utf-8-sig", low_memory=False)
-        except UnicodeDecodeError:
-            return reading_func(path, encoding="latin", low_memory=False)
-    else:
-        # Read Excel and Parquet files without encoding
-        return reading_func(path)
-
-def find_substring_index(lst, substring):
-    for i, item in enumerate(lst):
-        if substring in item:
-            return i
-    return -1
 
 def get_feed_date(df):
     formats = ["%Y%m%d", "%d/%m/%Y", "%m/%d/%Y"]
-    index = find_substring_index(df.columns,'DateExtract')
-    if index != -1:
-        column = list(df.columns)[index]
-    else:
-        column = 'DateExtractRun'
-    result = None
-    current_date = None
+    column = next((col for col in df.columns if "DateExtract" in col), "DateExtractRun")
     for format in formats:
         try:
-            current_date = datetime.strptime(
+            return datetime.strptime(
                 str(df[column].unique().tolist()[0]), format
             ).strftime("%Y-%m-%d")
         except ValueError:
             continue
-        result = current_date
-    if not result:
-        result = datetime.now().strftime("%Y-%m-%d")
-    return result
+    return datetime.now().strftime("%Y-%m-%d")
 
+
+def get_null_counts(df, columns, provided):
+    return {
+        col: (df[col].isnull().sum(), "N/A or Blank values")
+        for col in columns
+        if not provided or df[col].isnull().sum() != 0
+    }
+
+
+def add_rows_to_frame(frame, data_dict, stats_type, feed_date, dataset_id):
+    rows = [
+        {
+            "type": stats_type,
+            "value": val[0],
+            "reason": val[1],
+            "related_columns": col,
+            "dataset_id": dataset_id,
+            "feed_date": feed_date,
+        }
+        for col, val in data_dict.items()
+    ]
+    return pd.concat([frame, pd.DataFrame(rows)], ignore_index=True)
 
 def get_null_counts(df: pd.DataFrame, columns: list[str], provided):
     null_counts = {}
@@ -190,8 +69,8 @@ def get_total_count(df):
     return {"All": (len(df), "Count of all rows in the dataset")}
 
 
-def get_duplicate_count(df):
-    return {"All": (df.duplicated().sum(), "Count of duplicate rows in the dataset")}
+def get_duplicate_count(df,columns):
+    return {"All": (df.duplicated(subset=columns).sum(), "Count of duplicate rows in the dataset")}
 
 
 def check_price_columns_count(
@@ -225,41 +104,6 @@ def check_price_columns_count(
 
     return comparison_results
 
-
-def add_rows_to_frame(
-    frame: pd.DataFrame,
-    data_dict: dict,
-    stats_type: str,
-    feed_date: str,
-    dataset_id: int,
-):
-    rows = []
-    for column, value in data_dict.items():
-        val = value[0]
-        reason = value[1]
-        row = {}
-        row["type"] = stats_type
-        row["value"] = val
-        row["reason"] = reason
-        row["related_columns"] = column
-        row["dataset_id"] = dataset_id
-        row["feed_date"] = feed_date
-        rows.append(row)
-
-    frame = pd.concat([frame, pd.DataFrame(rows)], ignore_index=True)
-    return frame
-
-
-def check_critical_columns_present(frame, columns, new=True):
-    frame_cols = frame.columns
-    for col in columns:
-        if col not in frame_cols:
-            if new:
-                exit(f"Critical column '{col}' not found in the new file.")
-            else:
-                exit(f"Critical column '{col}' not found in the old file.")
-
-
 def get_difference(new_df, old_df):
     return {
         "All": (
@@ -267,7 +111,6 @@ def get_difference(new_df, old_df):
             "Count difference between new and old dataset",
         )
     }
-
 
 def perform_qa(args,api):
     new_df = read_frame(args.new_file)
@@ -286,6 +129,16 @@ def perform_qa(args,api):
         check_critical_columns_present(new_df, critical_columns)
         check_critical_columns_present(old_df, critical_columns, new=False)
 
+
+    # Determine duplicate columns if not provided
+    duplicate_filter = args.duplicate_filter
+    provided = True
+    if not duplicate_filter:
+        duplicate_filter = new_df.columns.tolist()
+        provided = False
+    else:
+        check_critical_columns_present(new_df, duplicate_filter)
+
     NEW_FEED_DATE = get_feed_date(new_df)
 
     current_price_col = args.current_price
@@ -298,7 +151,7 @@ def perform_qa(args,api):
         "NullCount": lambda: get_null_counts(new_df, critical_columns, provided),
         "DataType": lambda: check_outliers(new_df, old_df),
         "TotalCount": lambda: get_total_count(new_df),
-        "DuplicateCount": lambda: get_duplicate_count(new_df),
+        "DuplicateCount": lambda: get_duplicate_count(new_df,duplicate_filter),
         "PriceOutliersCount": lambda: check_price_columns_count(
             new_df, current_price_col, original_price_col
         ),
@@ -315,71 +168,3 @@ def perform_qa(args,api):
     frame.to_csv(args.output_file, index=False)
     frame = frame.to_dict(orient="records")
     api.create_stats_data(dataset_id, frame)
-
-
-# Set up argparse for CLI arguments
-def main():
-    global TOKEN
-
-    # Load token from configuration file if available
-    load_token()
-
-
-    parser = argparse.ArgumentParser(description="CLI to manage datasets")
-    parser.add_argument("--token", type=str, help="API token for authentication")
-    subparsers = parser.add_subparsers(dest="command")
-
-    # Subparser for displaying datasets
-    parser_list = subparsers.add_parser("list", help="Display all available dataset IDs")
-
-    parser_remove= subparsers.add_parser("remove", help="Remove a dataset ID")
-    parser_remove.add_argument("id", type=int, help="Provide the dataset id to remove")
-
-    # Subparser for creating a dataset
-    parser_create = subparsers.add_parser("create", help="Create a new dataset")
-    parser_create.add_argument("name", type=str, help="Name of the dataset to create")
-    parser_create.add_argument("days", type=int, help="Frequency in days for the dataset to create")
-    parser_create.add_argument("sites", type=int, help="Total number of sites for the dataset to create")
-
-    # Subparser for QA
-    parser_qa = subparsers.add_parser("stats", help="Perform QA on a dataset")
-    parser_qa.add_argument("-n", "--new_file", required=True, type=str, help="Path to the new data feed CSV file")
-    parser_qa.add_argument("-o", "--old_file", required=True, type=str, help="Path to the old data feed CSV file")
-    parser_qa.add_argument("-d", "--dataset_id", required=True, type=int, help="Provide the dataset id")
-    parser_qa.add_argument("-r", "--output_file", default="output.csv", type=str, help="Path for the output Excel file")
-    parser_qa.add_argument("-cp", "--current_price", type=str, default=None, help="Current price column in the data")
-    parser_qa.add_argument("-op", "--original_price", type=str, default=None, help="Original price column in the data")
-    parser_qa.add_argument("-c", "--critical_columns", nargs="+", default=None, help="List of critical columns to check for null values")
-
-    args = parser.parse_args()
-
-    # Token handling: prioritize argument, then environment variable, then prompt
-    if args.token:
-        TOKEN = args.token
-        save_token(TOKEN)  # Save token for future use
-    elif not TOKEN:
-        TOKEN = input("Enter your API token: ")
-        if TOKEN:
-            save_token(TOKEN)  # Save token if provided by user input
-
-    # Ensure the token is available for subsequent API calls
-    if not TOKEN:
-        print("Error: API token is required.")
-        return
-
-    api = APIHandler(TOKEN=TOKEN)
-
-    if args.command == "list":
-        display_datasets(api)
-    elif args.command == "create":
-        success = api.create_dataset(name=args.name, frequency_in_days=args.days, total_sites=args.sites)
-        if success:
-            display_datasets(api)  # Display the updated list if the dataset was created successfully
-    elif args.command == "stats":
-        perform_qa(args, api)
-    elif args.command == "remove":
-        api.remove_datasets(args.id)
-
-
-if __name__ == "__main__":
-    main()

@@ -1,12 +1,12 @@
 import argparse
 from datetime import datetime
-from automated_qa.config import load_token, save_token, TOKEN
+from automated_qa.config import load_token, save_token
 from automated_qa.api import APIHandler
 from automated_qa.qa import perform_qa
 from automated_qa.utils import read_frame,display_datasets,valid_date
 
 def main():
-    load_token()
+    TOKEN = load_token()
 
     parser = argparse.ArgumentParser(description="CLI to manage datasets")
     parser.add_argument("--token", type=str, help="API token for authentication")
@@ -74,7 +74,7 @@ def main():
     elif args.command == "stats":
         perform_qa(args, api)
     elif args.command == "remove":
-        api.remove_datasets(args.id)
+        success = api.remove_datasets(args.id)
         if success:
             display_datasets(api)  # Display the updated list if the dataset was deleted successfully
     elif args.command == "remove_stat":

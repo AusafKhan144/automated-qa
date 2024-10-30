@@ -66,7 +66,7 @@ class APIHandler:
             return False
 
     def remove_datasets_stats(self,dataset_id,feed_date):
-        response = requests.delete(f"{self.base_url}/api/stats/{dataset_id}?feed_date={feed_date}", headers=self.headers)
+        response = requests.delete(f"{self.base_url}/api/stats/{dataset_id}/?feed_date={feed_date}", headers=self.headers)
         if response.status_code == 200:
             print(f"Response: {response.json()['detail']}")
             return True
@@ -82,7 +82,7 @@ class APIHandler:
             "frequency_in_days": frequency_in_days,
             "total_sites": total_sites,
         }
-        response = requests.post(
+        response = requests.put(
             f"{self.base_url}/api/dataset/{dataset_id}", headers=self.headers, json=json_data
         )
         if response.status_code == 200:

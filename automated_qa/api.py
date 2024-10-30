@@ -2,7 +2,7 @@ import requests
 import json
 
 class APIHandler:
-    base_url = f"https://datamonitoring.watchmycompetitor.com/"
+    base_url = f"https://datamonitoring.watchmycompetitor.com"
     headers = {}
 
     def __init__(self, **kwargs):

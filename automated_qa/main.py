@@ -21,6 +21,9 @@ def main():
 
     parser_modify= subparsers.add_parser("modify", help="Modify a dataset ID")
     parser_modify.add_argument("id", type=int, help="Provide the dataset id to modify")
+    parser_modify.add_argument("name", type=str, help="Name of the dataset to modify")
+    parser_modify.add_argument("days", type=int, help="Frequency in days for the dataset to modify")
+    parser_modify.add_argument("sites", type=int, help="Total number of sites for the dataset to modify")
 
     parser_remove_stat= subparsers.add_parser("remove_stat", help="Remove a dataset ID Stats")
     parser_remove_stat.add_argument("id", type=int, help="Provide the dataset id to remove")
@@ -67,12 +70,16 @@ def main():
         success = api.create_dataset(name=args.name, frequency_in_days=args.days, total_sites=args.sites)
         if success:
             display_datasets(api)  # Display the updated list if the dataset was created successfully
+    elif args.command == "modify":
+        success = api.modify_datasets(args.id,name=args.name, frequency_in_days=args.days, total_sites=args.sites)
+        if success:
+            display_datasets(api)  # Display the updated list if the dataset was modified successfully
     elif args.command == "stats":
         perform_qa(args, api)
     elif args.command == "remove":
         api.remove_datasets(args.id)
-    elif args.command == "remove":
-        api.modify_datasets(args.id)
+        if success:
+            display_datasets(api)  # Display the updated list if the dataset was deleted successfully
     elif args.command == "remove_stat":
         api.remove_datasets_stats(args.id,args.feed_date)
 

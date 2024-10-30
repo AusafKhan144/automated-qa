@@ -28,7 +28,8 @@ class APIHandler:
     
     def remove_datasets(self, dataset_id):
         response = requests.delete(f"{self.base_url}/api/dataset/{dataset_id}", headers=self.headers)
-        if response.status_code == 204:
+        if response.status_code == 200:
+            print(f"Response: {response.json()['detail']}")
             return True
         else:
             print("Failed to remove dataset")
@@ -66,7 +67,8 @@ class APIHandler:
 
     def remove_datasets_stats(self,dataset_id,feed_date):
         response = requests.delete(f"{self.base_url}/api/stats/{dataset_id}?feed_date={feed_date}", headers=self.headers)
-        if response.status_code == 204:
+        if response.status_code == 200:
+            print(f"Response: {response.json()['detail']}")
             return True
         else:
             print("Failed to get available datasets")
@@ -74,12 +76,20 @@ class APIHandler:
             print(f"Response: {response.text}")
             return {}
         
-    def modify_datasets(self,dataset_id):
-        response = requests.put(f"{self.base_url}/api/dataset/{dataset_id}", headers=self.headers)
-        if response.status_code == 204:
-            return response.json()
+    def modify_datasets(self,dataset_id, name, frequency_in_days, total_sites):
+        json_data = {
+            "name": name,
+            "frequency_in_days": frequency_in_days,
+            "total_sites": total_sites,
+        }
+        response = requests.post(
+            f"{self.base_url}/api/dataset/{dataset_id}", headers=self.headers, json=json_data
+        )
+        if response.status_code == 200:
+            print(f'Successfully Modified dataset with ID: {response.json()["id"]}')
+            return True
         else:
-            print("Failed to get available datasets")
+            print("Failed to create dataset")
             print(f"Status code: {response.status_code}")
             print(f"Response: {response.text}")
-            return {}
+            return False

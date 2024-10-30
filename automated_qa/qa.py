@@ -141,6 +141,8 @@ def perform_qa(args,api):
 
     if not args.dataset_date:
         NEW_FEED_DATE = get_feed_date(new_df)
+    else:
+        NEW_FEED_DATE = args.dataset_date
 
     current_price_col = args.current_price
     original_price_col = args.original_price

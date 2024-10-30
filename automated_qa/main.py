@@ -55,7 +55,7 @@ def main():
         save_token(token)  # Save the token for future use
 
     # Ensure the token is available for subsequent API calls
-    if not TOKEN:
+    if not token:
         print("Error: API token is required.")
         return
 

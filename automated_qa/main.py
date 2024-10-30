@@ -6,7 +6,6 @@ from automated_qa.qa import perform_qa
 from automated_qa.utils import read_frame,display_datasets,valid_date
 
 def main():
-    global TOKEN
     load_token()
 
     parser = argparse.ArgumentParser(description="CLI to manage datasets")
@@ -50,20 +49,17 @@ def main():
     args = parser.parse_args()
 
     # Token handling: prioritize argument, then environment variable, then prompt
-    if args.token:
-        TOKEN = args.token
-        save_token(TOKEN)  # Save token for future use
-    elif not TOKEN:
-        TOKEN = input("Enter your API token: ")
-        if TOKEN:
-            save_token(TOKEN)  # Save token if provided by user input
+    token = args.token or TOKEN
+    if not token:
+        token = input("Enter your API token: ")
+        save_token(token)  # Save the token for future use
 
     # Ensure the token is available for subsequent API calls
     if not TOKEN:
         print("Error: API token is required.")
         return
 
-    api = APIHandler(TOKEN=TOKEN)
+    api = APIHandler(TOKEN=token)
 
     if args.command == "list":
         display_datasets(api)

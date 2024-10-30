@@ -10,6 +10,7 @@ def load_token():
         with open(CONFIG_PATH, 'r') as file:
             config = json.load(file)
             TOKEN = config.get("token")
+            print("Already Authenticated")
 
 def save_token(token):
     with open(CONFIG_PATH, 'w') as file:

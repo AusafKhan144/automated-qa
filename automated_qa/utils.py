@@ -12,8 +12,11 @@ def read_frame(path):
 
     if not reading_func:
         raise ValueError(f"Unsupported file format: {ext}")
-
-    return reading_func(path, encoding="utf-8-sig") if ext == ".csv" else reading_func(path)
+    try:
+        df = reading_func(path, encoding="utf-8-sig") if ext == ".csv" else reading_func(path)
+    except:
+        df = reading_func(path, encoding="latin") if ext == ".csv" else reading_func(path)
+    return df
 
 def display_datasets(api):
     datasets = api.get_datasets()

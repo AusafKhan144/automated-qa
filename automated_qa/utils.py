@@ -29,7 +29,7 @@ def display_datasets(api):
 
 def valid_date(s):
     try:
-        return datetime.strptime(s, "%Y-%m-%d").date()
+        return datetime.strptime(s, "%Y-%m-%d").date().strftime("%Y-%m-%d")
     except ValueError:
         exit(f"Not a valid date: '{s}'. Expected format: YYYY-MM-DD.")
 

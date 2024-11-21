@@ -23,7 +23,7 @@ def display_datasets(api):
     if datasets:
         print("Available Dataset IDs:")
         for dataset in datasets:
-            print(f"ID: {dataset['id']} - Name: {dataset.get('name', 'Unnamed')}")
+            print(f"ID: {dataset['dataset_id']} - Name: {dataset.get('name', 'Unnamed')}")
     else:
         print("No datasets found.")
 

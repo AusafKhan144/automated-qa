@@ -86,7 +86,7 @@ class APIHandler:
             f"{self.base_url}/api/dataset/{dataset_id}", headers=self.headers, json=json_data
         )
         if response.status_code == 200:
-            print(f'Successfully Modified dataset with ID: {response.json()["id"]}')
+            print(f'Successfully Modified dataset with ID: {response.json()["dataset_id"]}')
             return True
         else:
             print("Failed to create dataset")

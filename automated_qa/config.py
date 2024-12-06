@@ -1,8 +1,10 @@
 import json
 import os
 
+
 CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".cli_app_config.json")
 TOKEN = None
+SERVICE_ACCOUNT_PATH = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
 
 def load_token():
     global TOKEN

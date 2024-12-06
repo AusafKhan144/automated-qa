@@ -4,6 +4,7 @@ from automated_qa.config import load_token, save_token
 from automated_qa.api import APIHandler
 from automated_qa.qa import perform_qa
 from automated_qa.utils import read_frame,display_datasets,valid_date
+from automated_qa.pipeline_prep import prepare_previous_dates_data
 
 def main():
     TOKEN = load_token()
@@ -46,6 +47,11 @@ def main():
     parser_qa.add_argument("-dc", "--duplicate_filter", nargs="+", default=None, help="List columns to check for duplicated values")
     parser_qa.add_argument('-date',"--dataset_date", type=valid_date,default=None, help="Provide the feed_date")
 
+    parser_prepare = subparsers.add_parser("prepare",help="Prepare and upload the previous dates data to the cloud")
+    parser_prepare.add_argument("id", type=int,required=True, help="Provide the dataset id")
+    parser_prepare.add_argument("-n", "--new_file", required=True, type=str, help="Path to the new data feed CSV file")
+    parser_prepare.add_argument('-date',"--dataset_date",required=True, type=valid_date,default=None, help="Provide the feed_date")
+
     args = parser.parse_args()
 
     # Token handling: prioritize argument, then environment variable, then prompt
@@ -79,6 +85,8 @@ def main():
             display_datasets(api)  # Display the updated list if the dataset was deleted successfully
     elif args.command == "remove_stat":
         api.remove_datasets_stats(args.id,args.feed_date)
+    elif args.command == "prepare":
+        prepare_previous_dates_data(api,args.id, args.new_file, args.dataset_date)
 
 if __name__ == "__main__":
     main()

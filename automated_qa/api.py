@@ -46,6 +46,16 @@ class APIHandler:
             print(f"Status code: {response.status_code}")
             print(f"Response: {response.text}")
             return {}
+        
+    def get_datasets_by_id(self,dataset_id):
+        response = requests.get(f"{self.base_url}/api/dataset/{dataset_id}", headers=self.headers)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print("Failed to get available datasets")
+            print(f"Status code: {response.status_code}")
+            print(f"Response: {response.text}")
+            return {}
 
     def create_dataset(self, name, frequency_in_days, total_sites):
         json_data = {
@@ -57,7 +67,7 @@ class APIHandler:
             f"{self.base_url}/api/dataset/", headers=self.headers, json=json_data
         )
         if response.status_code == 200:
-            print(f'Successfully created dataset with ID: {response.json()["id"]}')
+            print(f'Successfully created dataset with ID: {response.json()["dataset_id"]}')
             return True
         else:
             print("Failed to create dataset")

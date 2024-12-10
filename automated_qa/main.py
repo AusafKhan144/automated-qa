@@ -8,7 +8,6 @@ from automated_qa.pipeline_prep import prepare_previous_dates_data
 import os
 
 def main():
-    TOKEN = load_config()
 
     parser = argparse.ArgumentParser(description="CLI to manage datasets")
     parser.add_argument("--token", type=str, help="API token for authentication")
@@ -40,7 +39,7 @@ def main():
     parser_create.add_argument("first_sent_date", type=valid_date, help="Date of dataset first sent")
     parser_create.add_argument("on_weekends", type=bool, help="set true if extract runs on weekends as well")
 
-    # Subparser for QA
+    # Subparser for QA681bab2eae6a764dcb5befee6564db5f8c995fcb35ce3077ea0d04d346a5a62d
     parser_qa = subparsers.add_parser("stats", help="Perform QA on a dataset")
     parser_qa.add_argument("-n", "--new_file", required=True, type=str, help="Path to the new data feed CSV file")
     parser_qa.add_argument("-o", "--old_file", required=True, type=str, help="Path to the old data feed CSV file")
@@ -81,7 +80,7 @@ def main():
             save_config(existing_token, svc_path)
             SERVICE_ACCOUNT_PATH = svc_path
 
-    api = APIHandler(TOKEN=TOKEN)
+    api = APIHandler(TOKEN=existing_token)
 
     if args.command == "list":
         display_datasets(api)

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="automated_qa",
-    version="0.3.3",
+    version="0.3.4",
     packages=find_packages(),
     install_requires=[
         "requests",  # Add any dependencies your script needs here

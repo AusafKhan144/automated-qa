@@ -1,13 +1,6 @@
 from google.cloud import storage
 import os
-from automated_qa.config import SERVICE_ACCOUNT_PATH
 from datetime import datetime
-
-if SERVICE_ACCOUNT_PATH:
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = SERVICE_ACCOUNT_PATH
-else:
-    SERVICE_ACCOUNT_PATH = input('SERVICE ACCOUNT PATH')
-    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = SERVICE_ACCOUNT_PATH
 
 def create_blob_paths(project_name,prev_date,prev_year):
     

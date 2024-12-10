@@ -57,11 +57,13 @@ class APIHandler:
             print(f"Response: {response.text}")
             return {}
 
-    def create_dataset(self, name, frequency_in_days, total_sites):
+    def create_dataset(self, name, frequency_in_days, total_sites,first_sent_date,on_weekends):
         json_data = {
             "name": name,
             "frequency_in_days": frequency_in_days,
             "total_sites": total_sites,
+            "first_sent_date": first_sent_date,
+            "on_weekends": on_weekends
         }
         response = requests.post(
             f"{self.base_url}/api/dataset/", headers=self.headers, json=json_data
@@ -86,11 +88,13 @@ class APIHandler:
             print(f"Response: {response.text}")
             return {}
         
-    def modify_datasets(self,dataset_id, name, frequency_in_days, total_sites):
+    def modify_datasets(self,dataset_id, name, frequency_in_days, total_sites,first_sent_date,on_weekends):
         json_data = {
             "name": name,
             "frequency_in_days": frequency_in_days,
             "total_sites": total_sites,
+            "first_sent_date": first_sent_date,
+            "on_weekends": on_weekends
         }
         response = requests.put(
             f"{self.base_url}/api/dataset/{dataset_id}", headers=self.headers, json=json_data
